@@ -5,157 +5,106 @@ const Listing = require("../models/listing.js");
 const wrapAsync = require("../utils/wrapAsync.js");
 
 const {
-isLoggedIn,
-isowner,
-validateListing
+  isLoggedIn,
+  isowner,
+  validateListing,
 } = require("../middleware.js");
 
-const listingController =
-require("../controller/listing.js");
+const listingController = require("../controller/listing.js");
 
 const multer = require("multer");
-
-const { storage } =
-require("../cloudconfig.js");
-
-const upload =
-multer({ storage });
+const { storage } = require("../cloudconfig.js");
+const upload = multer({ storage });
 
 /* ==================================
-INDEX + CREATE
+   INDEX + CREATE
 ================================== */
 
-router.route("/")
-.get(
-wrapAsync(
-listingController.index
-)
-)
-.post(
-isLoggedIn,
-upload.single("listing[image]"),
-validateListing,
-wrapAsync(
-listingController.createListing
-)
-);
+router
+  .route("/")
+  .get(wrapAsync(listingController.index))
+  .post(
+    isLoggedIn,
+    upload.single("listing[image]"),
+    validateListing,
+    wrapAsync(listingController.createListing)
+  );
 
 /* ==================================
-NEW LISTING FORM
+   NEW LISTING FORM
 ================================== */
 
 router.get(
-"/new",
-isLoggedIn,
-listingController.renderNewForm
+  "/new",
+  isLoggedIn,
+  listingController.renderNewForm
 );
 
 /* ==================================
-SEARCH LISTINGS
+   SEARCH LISTINGS
 ================================== */
 
 router.get(
-"/search",
-wrapAsync(async (req, res) => {
-
-```
+  "/search",
+  wrapAsync(async (req, res) => {
     const { query } = req.query;
 
-    const allListing =
-    await Listing.find({
-
-        $or: [
-
-            {
-                title: {
-                    $regex: query,
-                    $options: "i"
-                }
-            },
-
-            {
-                location: {
-                    $regex: query,
-                    $options: "i"
-                }
-            },
-
-            {
-                country: {
-                    $regex: query,
-                    $options: "i"
-                }
-            }
-
-        ]
-
+    const allListing = await Listing.find({
+      $or: [
+        {
+          title: {
+            $regex: query,
+            $options: "i",
+          },
+        },
+        {
+          location: {
+            $regex: query,
+            $options: "i",
+          },
+        },
+        {
+          country: {
+            $regex: query,
+            $options: "i",
+          },
+        },
+      ],
     });
 
-    res.render(
-        "listings/index",
-        { allListing }
-    );
-
-})
-```
-
+    res.render("listings/index", { allListing });
+  })
 );
 
 /* ==================================
-SHOW
-UPDATE
-DELETE
+   SHOW + UPDATE + DELETE
 ================================== */
 
-router.route("/:id")
-
-.get(
-wrapAsync(
-listingController.showListing
-)
-)
-
-.put(
-isLoggedIn,
-isowner,
-upload.single("listing[image]"),
-validateListing,
-
-```
-wrapAsync(
-    listingController.updateListing
-)
-```
-
-)
-
-.delete(
-isLoggedIn,
-isowner,
-
-```
-wrapAsync(
-    listingController.destroyListing
-)
-```
-
-);
+router
+  .route("/:id")
+  .get(wrapAsync(listingController.showListing))
+  .put(
+    isLoggedIn,
+    isowner,
+    upload.single("listing[image]"),
+    validateListing,
+    wrapAsync(listingController.updateListing)
+  )
+  .delete(
+    isLoggedIn,
+    isowner,
+    wrapAsync(listingController.destroyListing)
+  );
 
 /* ==================================
-EDIT FORM
+   EDIT FORM
 ================================== */
 
 router.get(
-"/:id/edit",
-isLoggedIn,
-isowner,
-
-```
-wrapAsync(
-    listingController.renderEditForm
-)
-```
-
+  "/:id/edit",
+  isLoggedIn,
+  isowner,
+  wrapAsync(listingController.renderEditForm)
 );
 
 module.exports = router;

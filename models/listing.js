@@ -1,79 +1,72 @@
 const mongoose = require("mongoose");
-
 const Review = require("./reviews.js");
 
 const Schema = mongoose.Schema;
 
 /* =====================================
-LISTING SCHEMA
+   LISTING SCHEMA
 ===================================== */
 
-const listingSchema = new Schema({
-
-```
-title: {
-    type: String,
-    required: true,
-    trim: true
-},
-
-description: {
-    type: String,
-    required: true
-},
-
-image: {
-
-    url: {
-        type: String,
-
-        default:
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945"
+const listingSchema = new Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
     },
 
-    filename: {
+    description: {
+      type: String,
+      required: true,
+    },
+
+    image: {
+      url: {
         type: String,
-        default: "defaultListing"
-    }
+        default:
+          "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+      },
 
-},
+      filename: {
+        type: String,
+        default: "defaultListing",
+      },
+    },
 
-price: {
-    type: Number,
-    required: true,
-    min: 0
-},
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
 
-location: {
-    type: String,
-    required: true
-},
+    location: {
+      type: String,
+      required: true,
+    },
 
-country: {
-    type: String,
-    required: true
-},
+    country: {
+      type: String,
+      required: true,
+    },
 
-lat: {
-    type: Number,
-    default: 23.2599
-},
+    lat: {
+      type: Number,
+      default: 23.2599,
+    },
 
-lng: {
-    type: Number,
-    default: 77.4126
-},
+    lng: {
+      type: Number,
+      default: 77.4126,
+    },
 
-/* =========================
-   CATEGORY
-========================= */
+    /* =========================
+       CATEGORY
+    ========================= */
 
-category: {
+    category: {
+      type: String,
 
-    type: String,
-
-    enum: [
-
+      enum: [
         "Trending",
         "Rooms",
         "Cities",
@@ -84,112 +77,75 @@ category: {
         "Farms",
         "Arctic",
         "Domes",
-        "Boats"
+        "Boats",
+      ],
 
+      default: "Trending",
+    },
+
+    /* =========================
+       FEATURED LISTING
+    ========================= */
+
+    featured: {
+      type: Boolean,
+      default: false,
+    },
+
+    /* =========================
+       WISHLIST
+    ========================= */
+
+    wishlist: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
     ],
 
-    default: "Trending"
+    /* =========================
+       REVIEWS
+    ========================= */
 
-},
-
-/* =========================
-   FEATURED LISTING
-========================= */
-
-featured: {
-
-    type: Boolean,
-
-    default: false
-
-},
-
-/* =========================
-   WISHLIST
-========================= */
-
-wishlist: [
-
-    {
-
+    reviews: [
+      {
         type: Schema.Types.ObjectId,
+        ref: "Review",
+      },
+    ],
 
-        ref: "User"
+    /* =========================
+       OWNER
+    ========================= */
 
-    }
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-],
+/* =====================================
+   DELETE REVIEWS WHEN LISTING DELETED
+===================================== */
 
-/* =========================
-   REVIEWS
-========================= */
-
-reviews: [
-
-    {
-
-        type: Schema.Types.ObjectId,
-
-        ref: "Review"
-
-    }
-
-],
-
-/* =========================
-   OWNER
-========================= */
-
-owner: {
-
-    type: Schema.Types.ObjectId,
-
-    ref: "User"
-
-}
-```
-
-},
-
-{
-timestamps: true
+listingSchema.post("findOneAndDelete", async (listing) => {
+  if (listing) {
+    await Review.deleteMany({
+      _id: {
+        $in: listing.reviews,
+      },
+    });
+  }
 });
 
 /* =====================================
-DELETE REVIEWS WHEN LISTING DELETED
+   MODEL
 ===================================== */
 
-listingSchema.post(
-"findOneAndDelete",
-
-```
-async (listing) => {
-
-    if(listing){
-
-        await Review.deleteMany({
-
-            _id: {
-                $in: listing.reviews
-            }
-
-        });
-
-    }
-
-}
-```
-
-);
-
-/* =====================================
-MODEL
-===================================== */
-
-const Listing =
-mongoose.model(
-"Listing",
-listingSchema
-);
+const Listing = mongoose.model("Listing", listingSchema);
 
 module.exports = Listing;
